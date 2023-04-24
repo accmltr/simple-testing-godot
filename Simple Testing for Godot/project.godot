@@ -14,6 +14,10 @@ config/name="Simple Testing for Godot"
 config/features=PackedStringArray("4.0", "Forward Plus")
 config/icon="res://icon.png"
 
+[autoload]
+
+Testing="*res://addons/simple testing/testing.gd"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/simple testing/plugin.cfg")
