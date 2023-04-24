@@ -1,10 +1,10 @@
 extends Node
 
-var _is_testing: bool = false # True while testing is happening [For internal use].
-var _cached_errors: Array[String]
+var _is_testing: bool = false # True while testing is happening. [For internal use]
+var _cached_errors: Array[String] # All errors since last `_collect_errors()` call. [For internal use]
 
 
-func ensure(condition: bool, src: Object, msg: String, err_code: int = ERR_BUG) -> void:
+func ensure(condition: bool, src: Object, msg: String, err_code: int = -1) -> void:
 	# Checks a given condition and triggers an error if it's not met.
 	# 
 	# This method is designed to provide more context about the error's source and display a custom error message
@@ -14,7 +14,7 @@ func ensure(condition: bool, src: Object, msg: String, err_code: int = ERR_BUG) 
 	#   - condition (bool): The condition to be checked.
 	#   - src (Object): The source object that generated the error.
 	#   - msg (String): A custom error message to be displayed if the condition fails.
-	#   - err_code (int): An optional error code to be included in the error message (default: ERR_BUG).
+	#   - err_code (int): An optional error code to be included in the error message (default: -1).
 	#
 	# Usage example:
 	#   ensure(player.health > 0, self, "Player health must be greater than 0")
@@ -32,7 +32,11 @@ func ensure(condition: bool, src: Object, msg: String, err_code: int = ERR_BUG) 
 		src_string = src.resource_path
 	
 	# Create the error string:
-	var err_string = "Error(src: %s, msg: %s, err_code: %s)" % [src_string, msg, err_code]
+	var err_string
+	if not err_code == -1:
+		err_string = "Error(src: %s, msg: %s, err_code: %s)" % [src_string, msg, err_code]
+	else:
+		err_string = "Error(src: %s, msg: %s)" % [src_string, msg]
 	
 	if _is_testing and not condition:
 		# Cache the error:
