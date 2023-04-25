@@ -4,11 +4,69 @@
 script/source = "@tool
 extends Control
 
+func _enter_tree():
+	
+	# Find and print all unit tests found in project:
+	var unit_tests = _find_unit_tests()
+	print(\"Unit tests found: \",unit_tests)
+
+
+func _find_unit_tests():
+	# Finds all the GDScript files in the project that inherit from the UnitTest class.
+	var root_directory = \"res://\"
+	return _find_unit_tests_recursive(root_directory)
+
+func _find_unit_tests_recursive(path: String) -> Array[String]:
+	# Recursively searches for GDScript files that inherit from the UnitTest class in the given path.
+	
+	var unit_tests: Array[String] = []
+	
+	# Open given path:
+	var dir = DirAccess.open(path)
+	if not dir:
+		print(\"An error occurred when trying to access the path: \" + path)
+		return unit_tests
+	
+	# Recursively search for UnitTests:
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	while file_name != \"\":
+		var full_path = path + file_name
+		if dir.current_is_dir():
+			for s in _find_unit_tests_recursive(full_path + \"/\"):
+				unit_tests.append(s)
+		else:
+			if file_name.ends_with(\".gd\"):
+				var file = FileAccess.open(full_path, FileAccess.READ)
+				if file.get_error() == OK:
+					var script_content = file.get_as_text()
+					if \"extends UnitTest\" in script_content:
+						unit_tests.append(full_path)
+				else:
+					print(\"An error occurred when trying to read the file: \" + full_path)
+				file.close()
+#			if file_name.ends_with(\".gd\"):
+#				var script = ResourceLoader.load(full_path)
+#				if script is Script:
+#					print(\"script is UnitTest: \", script is UnitTest)
+#					var script_instance = script.new()
+#					add_child(script_instance)
+#					print(\"instance is UnitTest: \", script is UnitTest)
+#					if script_instance.has_method(\"hello\"):
+#						script_instance.hello()
+#					print(\"file: \", file_name, \", get_class: \", (script as Script).get_class())
+#					print(\"base_script_class: \", (script as Script).get_base_script().get_class())
+#					print(\"instance_base_type_class: \", (script as Script).get_instance_base_type())
+#					unit_tests.append(full_path)
+		file_name = dir.get_next()
+	dir.list_dir_end()
+	
+	return unit_tests
 
 
 
 func _on_line_edit_text_submitted(new_text):
-	print(new_text)
+	print(\"Directory provided: \",new_text)
 "
 
 [node name="Tests" type="Control"]
@@ -57,5 +115,14 @@ offset_right = 0.125488
 grow_horizontal = 2
 grow_vertical = 2
 placeholder_text = "Test Folder"
+
+[node name="Tree" type="Tree" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 38.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [connection signal="text_submitted" from="test directory input/LineEdit" to="." method="_on_line_edit_text_submitted"]
