@@ -1,4 +1,5 @@
 extends UnitTest
 
-func hello():
-	print("heeeelo")
+func test_hello():
+	print("heeeelo broo")
+	istrue(false, self, "should be true!")

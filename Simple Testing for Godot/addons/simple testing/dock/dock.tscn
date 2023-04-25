@@ -8,10 +8,15 @@ extends Control
 var editor_interface: EditorInterface :
 	set(value):
 		editor_interface = value
-		value.get_resource_filesystem().filesystem_changed.connect($\"vbox/unit test tree\".refresh_tree)
+		value.get_resource_filesystem().filesystem_changed.connect($\"vbox/tests tree\".refresh_tree)
+
+
+func _on_run_all_pressed():
+	$\"vbox/tests tree\".run_all()
 "
 
 [sub_resource type="GDScript" id="GDScript_d7864"]
+resource_name = "test tree"
 script/source = "@tool
 extends Tree
 
@@ -29,7 +34,7 @@ func refresh_tree():
 	_find_unit_tests()
 
 
-func _find_unit_tests():
+func _find_unit_tests() -> Array[String]:
 	# Finds all the GDScript files in the project that inherit from the UnitTest class.
 	return _find_unit_tests_recursive(_root_dir, get_root())
 
@@ -64,7 +69,9 @@ func _find_unit_tests_recursive(path: String, parent: TreeItem = null) -> Array[
 				if file.get_error() == OK:
 					var script_content = file.get_as_text()
 					if \"extends UnitTest\" in script_content:
-						create_item(parent).set_text(0, file_name)
+						var tree_item = create_item(parent)
+						tree_item.set_text(0, file_name.split(\".\")[0])
+						tree_item.set_metadata(0, full_path)
 						unit_tests.append(full_path)
 				else:
 					print(\"An error occurred when trying to read the file: \" + full_path)
@@ -80,6 +87,58 @@ func _get_tree_item_child(tree_item: TreeItem, name: String) -> TreeItem:
 		if child.get_text(0) == name:
 			return child
 	return null
+
+
+func run_all() -> void:
+	refresh_tree()
+	
+	var root = get_root()
+	
+	# Return if tree empty:
+	if not root: return
+	
+	# Create lambda that runs a given TreeItem's UnitTest:
+	var t_runner: Callable = func(tree_item: TreeItem):
+		var test_filepath = tree_item.get_metadata(0)
+		var test_instance = load(test_filepath).new() as UnitTest
+		test_instance.name = tree_item.get_text(0)
+		
+		# Print which unit test script will run next:
+		$\"current test\".add_child(test_instance)
+		print(\"Runnings tests in \", test_instance.name + \".gd\")
+		Testing._is_testing = true
+		for m in test_instance.get_method_list():
+			var method_name = m[\"name\"]
+			if method_name.begins_with(\"test_\"):
+				print(\"    testing method: \", method_name)
+				test_instance.call(method_name)
+				var errors = Testing._collect_errors()
+				
+				if errors.is_empty():
+					tree_item.set_custom_color(0, Color.GREEN_YELLOW)
+				else:
+					tree_item.set_custom_color(0, Color.RED)
+				
+				# Print any errors that happened while running the test method:
+				for e in errors:
+					print(\"        \", e)
+		
+	
+	# Run the function for all unit tests in tree:
+	_traverse_and_apply(t_runner, get_root())
+
+func _traverse_and_apply(f: Callable, start: TreeItem) -> void:
+	# Check 'start':
+	assert(start, \"No starting node provided.\")
+	
+	# End condition:
+	if start.get_child_count() == 0:
+		f.call(start)
+		return
+	
+	# Recursion:
+	for c in start.get_children():
+		_traverse_and_apply(f, c)
 "
 
 [node name="Tests" type="Control"]
@@ -102,13 +161,14 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 5
 
-[node name="test directory element" type="Control" parent="vbox"]
+[node name="template element" type="Control" parent="vbox"]
 visible = false
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="vbox/test directory element"]
+[node name="Label" type="Label" parent="vbox/template element"]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 0.5
@@ -124,7 +184,7 @@ mouse_filter = 0
 text = "Tests Directory"
 vertical_alignment = 1
 
-[node name="LineEdit" type="LineEdit" parent="vbox/test directory element"]
+[node name="LineEdit" type="LineEdit" parent="vbox/template element"]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
@@ -152,13 +212,31 @@ If specified, all scripts inheriting from 'SimpleUnitTest' inside the given path
 
 If left empty, the entire project will be scanned by default."
 mouse_filter = 0
-text = "All Tests"
+text = " Test Tree"
 vertical_alignment = 1
 
-[node name="unit test tree" type="Tree" parent="vbox"]
+[node name="tests tree" type="Tree" parent="vbox"]
 layout_mode = 2
 size_flags_vertical = 3
 hide_root = true
 script = SubResource("GDScript_d7864")
 
-[connection signal="text_submitted" from="vbox/test directory element/LineEdit" to="." method="_on_line_edit_text_submitted"]
+[node name="current test" type="Node" parent="vbox/tests tree"]
+
+[node name="commands" type="Control" parent="vbox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="run all" type="Button" parent="vbox/commands"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -63.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "Run All"
+
+[connection signal="text_submitted" from="vbox/template element/LineEdit" to="." method="_on_line_edit_text_submitted"]
+[connection signal="pressed" from="vbox/commands/run all" to="." method="_on_run_all_pressed"]

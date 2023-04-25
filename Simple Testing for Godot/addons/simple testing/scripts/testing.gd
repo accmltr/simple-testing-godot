@@ -1,10 +1,11 @@
+@tool
 extends Node
 
 var _is_testing: bool = false # True while testing is happening. [For internal use]
 var _cached_errors: Array[String] # All errors since last `_collect_errors()` call. [For internal use]
 
 
-func ensure(condition: bool, src: Object, msg: String, err_code: int = -1) -> void:
+func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> void:
 	# Checks a given condition and triggers an error if it's not met.
 	# 
 	# This method is designed to provide more context about the error's source and display a custom error message
@@ -17,12 +18,12 @@ func ensure(condition: bool, src: Object, msg: String, err_code: int = -1) -> vo
 	#   - err_code (int): An optional error code to be included in the error message (default: -1).
 	#
 	# Usage example:
-	#   ensure(player.health > 0, self, "Player health must be greater than 0")
+	#   istrue(player.health > 0, self, "Player health must be greater than 0")
 	#
 	# When _is_testing is enabled, instead of raising errors, the errors are stored in the _cached_errors array.
 	
 	# Stringify the source's error:
-	var src_string = str(src)
+	var src_string: String = str(src)
 	if src is Node:
 		if src.is_inside_tree():
 			src_string = src.get_path()
