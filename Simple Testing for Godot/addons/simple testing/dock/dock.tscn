@@ -4,21 +4,16 @@
 script/source = "@tool
 extends Control
 
-@export var unit_test_tree: Tree
-
-func _enter_tree():
-	unit_test_tree.refresh_tree()
-
-
-func _on_line_edit_text_submitted(new_text):
-	print(\"Directory provided: \",new_text)
-
-func _on_refresh_button_pressed():
-	unit_test_tree.refresh_tree()
+#@export var unit_test_tree: Tree
+var editor_interface: EditorInterface :
+	set(value):
+		editor_interface = value
+		value.get_resource_filesystem().filesystem_changed.connect($\"vbox/unit test tree\".refresh_tree)
 "
 
 [sub_resource type="GDScript" id="GDScript_d7864"]
-script/source = "extends Tree
+script/source = "@tool
+extends Tree
 
 var _root_dir = \"res://\"
 
@@ -32,12 +27,6 @@ func refresh_tree():
 	create_item().set_text(0, _root_dir)
 	
 	_find_unit_tests()
-
-func _get_tree_item_child(tree_item: TreeItem, name: String) -> TreeItem:
-	for child in tree_item.get_children():
-		if child.get_text(0) == name:
-			return child
-	return null
 
 
 func _find_unit_tests():
@@ -62,7 +51,7 @@ func _find_unit_tests_recursive(path: String, parent: TreeItem = null) -> Array[
 		var full_path = path + file_name
 		if dir.current_is_dir():
 			var new_parent = create_item(parent)
-			new_parent.set_text(0, file_name)
+			new_parent.set_text(0, file_name + \"/\")
 			var results = _find_unit_tests_recursive(full_path + \"/\", new_parent)
 			if results.is_empty():
 				parent.remove_child(new_parent)
@@ -84,9 +73,16 @@ func _find_unit_tests_recursive(path: String, parent: TreeItem = null) -> Array[
 	dir.list_dir_end()
 	
 	return unit_tests
+
+
+func _get_tree_item_child(tree_item: TreeItem, name: String) -> TreeItem:
+	for child in tree_item.get_children():
+		if child.get_text(0) == name:
+			return child
+	return null
 "
 
-[node name="Tests" type="Control" node_paths=PackedStringArray("unit_test_tree")]
+[node name="Tests" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -98,7 +94,6 @@ offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
 script = SubResource("GDScript_iyw2o")
-unit_test_tree = NodePath("vbox/unit test tree")
 
 [node name="vbox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -107,21 +102,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-
-[node name="refresh element" type="Control" parent="vbox"]
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
-
-[node name="refresh button" type="Button" parent="vbox/refresh element"]
-layout_mode = 1
-anchors_preset = 11
-anchor_left = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -68.0
-grow_horizontal = 0
-grow_vertical = 2
-text = "Refresh"
 
 [node name="test directory element" type="Control" parent="vbox"]
 visible = false
@@ -155,11 +135,30 @@ grow_horizontal = 2
 grow_vertical = 2
 placeholder_text = "Test Folder"
 
+[node name="heading" type="Control" parent="vbox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+tooltip_text = "Relative path to the tests directory.
+
+If specified, all scripts inheriting from 'SimpleUnitTest' inside the given path and its sub-directories will be loaded for testing.
+
+If left empty, the entire project will be scanned by default."
+mouse_filter = 0
+text = "All Tests"
+vertical_alignment = 1
+
 [node name="unit test tree" type="Tree" parent="vbox"]
 layout_mode = 2
 size_flags_vertical = 3
 hide_root = true
 script = SubResource("GDScript_d7864")
 
-[connection signal="pressed" from="vbox/refresh element/refresh button" to="." method="_on_refresh_button_pressed"]
 [connection signal="text_submitted" from="vbox/test directory element/LineEdit" to="." method="_on_line_edit_text_submitted"]

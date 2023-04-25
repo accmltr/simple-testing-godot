@@ -6,10 +6,11 @@ var dock: Control
 # When the plugin is added/activated:
 func _enter_tree():
 	# Load the "Testing" singleton:
-	add_autoload_singleton("Testing", "res://addons/simple testing/testing.gd")
+	add_autoload_singleton("Testing", "res://addons/simple testing/scripts/testing.gd")
 	
 	# Load editor dock:
-	dock = load("res://addons/simple testing/ui/dock.tscn").instantiate()
+	dock = load("res://addons/simple testing/dock/dock.tscn").instantiate()
+	dock.editor_interface = get_editor_interface()
 	add_control_to_dock(EditorPlugin.DOCK_SLOT_LEFT_UR, dock)
 
 # When the plugin is removed/deactivated:
