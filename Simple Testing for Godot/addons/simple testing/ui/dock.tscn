@@ -1,22 +1,50 @@
-[gd_scene load_steps=2 format=3 uid="uid://u43yrdcachfs"]
+[gd_scene load_steps=3 format=3 uid="uid://u43yrdcachfs"]
 
 [sub_resource type="GDScript" id="GDScript_iyw2o"]
 script/source = "@tool
 extends Control
 
+@export var unit_test_tree: Tree
+
 func _enter_tree():
+	unit_test_tree.refresh_tree()
+
+
+func _on_line_edit_text_submitted(new_text):
+	print(\"Directory provided: \",new_text)
+
+func _on_refresh_button_pressed():
+	unit_test_tree.refresh_tree()
+"
+
+[sub_resource type="GDScript" id="GDScript_d7864"]
+script/source = "extends Tree
+
+var _root_dir = \"res://\"
+
+
+func refresh_tree():
 	
-	# Find and print all unit tests found in project:
-	var unit_tests = _find_unit_tests()
-	print(\"Unit tests found: \",unit_tests)
+	# Clear tree:
+	clear()
+	
+	# Create tree root:
+	create_item().set_text(0, _root_dir)
+	
+	_find_unit_tests()
+
+func _get_tree_item_child(tree_item: TreeItem, name: String) -> TreeItem:
+	for child in tree_item.get_children():
+		if child.get_text(0) == name:
+			return child
+	return null
 
 
 func _find_unit_tests():
 	# Finds all the GDScript files in the project that inherit from the UnitTest class.
-	var root_directory = \"res://\"
-	return _find_unit_tests_recursive(root_directory)
+	return _find_unit_tests_recursive(_root_dir, get_root())
 
-func _find_unit_tests_recursive(path: String) -> Array[String]:
+func _find_unit_tests_recursive(path: String, parent: TreeItem = null) -> Array[String]:
 	# Recursively searches for GDScript files that inherit from the UnitTest class in the given path.
 	
 	var unit_tests: Array[String] = []
@@ -27,49 +55,38 @@ func _find_unit_tests_recursive(path: String) -> Array[String]:
 		print(\"An error occurred when trying to access the path: \" + path)
 		return unit_tests
 	
-	# Recursively search for UnitTests:
+	# Recursively search for UnitTests and add them to the unit test tree:
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
 	while file_name != \"\":
 		var full_path = path + file_name
 		if dir.current_is_dir():
-			for s in _find_unit_tests_recursive(full_path + \"/\"):
-				unit_tests.append(s)
+			var new_parent = create_item(parent)
+			new_parent.set_text(0, file_name)
+			var results = _find_unit_tests_recursive(full_path + \"/\", new_parent)
+			if results.is_empty():
+				parent.remove_child(new_parent)
+			else:
+				for s in results:
+					unit_tests.append(s)
 		else:
 			if file_name.ends_with(\".gd\"):
 				var file = FileAccess.open(full_path, FileAccess.READ)
 				if file.get_error() == OK:
 					var script_content = file.get_as_text()
 					if \"extends UnitTest\" in script_content:
+						create_item(parent).set_text(0, file_name)
 						unit_tests.append(full_path)
 				else:
 					print(\"An error occurred when trying to read the file: \" + full_path)
 				file.close()
-#			if file_name.ends_with(\".gd\"):
-#				var script = ResourceLoader.load(full_path)
-#				if script is Script:
-#					print(\"script is UnitTest: \", script is UnitTest)
-#					var script_instance = script.new()
-#					add_child(script_instance)
-#					print(\"instance is UnitTest: \", script is UnitTest)
-#					if script_instance.has_method(\"hello\"):
-#						script_instance.hello()
-#					print(\"file: \", file_name, \", get_class: \", (script as Script).get_class())
-#					print(\"base_script_class: \", (script as Script).get_base_script().get_class())
-#					print(\"instance_base_type_class: \", (script as Script).get_instance_base_type())
-#					unit_tests.append(full_path)
 		file_name = dir.get_next()
 	dir.list_dir_end()
 	
 	return unit_tests
-
-
-
-func _on_line_edit_text_submitted(new_text):
-	print(\"Directory provided: \",new_text)
 "
 
-[node name="Tests" type="Control"]
+[node name="Tests" type="Control" node_paths=PackedStringArray("unit_test_tree")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -81,15 +98,37 @@ offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 2
 script = SubResource("GDScript_iyw2o")
+unit_test_tree = NodePath("vbox/unit test tree")
 
-[node name="test directory input" type="Control" parent="."]
+[node name="vbox" type="VBoxContainer" parent="."]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 15
 anchor_right = 1.0
-offset_bottom = 31.0
+anchor_bottom = 1.0
 grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Label" type="Label" parent="test directory input"]
+[node name="refresh element" type="Control" parent="vbox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="refresh button" type="Button" parent="vbox/refresh element"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -68.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "Refresh"
+
+[node name="test directory element" type="Control" parent="vbox"]
+visible = false
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="vbox/test directory element"]
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 0.5
@@ -105,7 +144,7 @@ mouse_filter = 0
 text = "Tests Directory"
 vertical_alignment = 1
 
-[node name="LineEdit" type="LineEdit" parent="test directory input"]
+[node name="LineEdit" type="LineEdit" parent="vbox/test directory element"]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
@@ -116,13 +155,11 @@ grow_horizontal = 2
 grow_vertical = 2
 placeholder_text = "Test Folder"
 
-[node name="Tree" type="Tree" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 38.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="unit test tree" type="Tree" parent="vbox"]
+layout_mode = 2
+size_flags_vertical = 3
+hide_root = true
+script = SubResource("GDScript_d7864")
 
-[connection signal="text_submitted" from="test directory input/LineEdit" to="." method="_on_line_edit_text_submitted"]
+[connection signal="pressed" from="vbox/refresh element/refresh button" to="." method="_on_refresh_button_pressed"]
+[connection signal="text_submitted" from="vbox/test directory element/LineEdit" to="." method="_on_line_edit_text_submitted"]
