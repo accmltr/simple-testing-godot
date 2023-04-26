@@ -109,7 +109,7 @@ func _find_unit_tests_recursive(path: String, parent: TreeItem = null) -> Array[
 								var m_item = create_item(u_item)
 								# Metadata in column 0 is to indicate if item is a unit test:
 								m_item.set_metadata(0, false)
-								m_item.set_text(0, m[\"name\"].trim_prefix(\"test_\"))
+								m_item.set_text(0, \"• \" + m[\"name\"].trim_prefix(\"test_\"))
 								m_item.set_custom_color(0, Color.LIGHT_CYAN)
 						test_instance.queue_free()
 				else:
@@ -152,7 +152,7 @@ func run_all() -> void:
 		for m_item in u_item.get_children():
 			var m_name = m_item.get_text(0)
 #			print(\"    testing method: \", m_name)
-			test_instance.call(\"test_\" + m_name)
+			test_instance.call(\"test_\" + m_name.trim_prefix(\"• \"))
 			var errors = Testing._collect_errors()
 			var n = errors.size()
 			err_count += n
