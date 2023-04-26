@@ -16,7 +16,7 @@ func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> vo
 	#
 	# Params:
 	#   - condition (bool): The condition to be checked.
-	#   - src (Object): The source object that generated the error.
+	#   - src (Object): The source object using this method.
 	#   - msg (String): A custom error message to be displayed if the condition fails.
 	#   - err_code (int): An optional error code to be included in the error message (default: -1).
 	#
@@ -40,6 +40,28 @@ func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> vo
 
 
 func error_happens(code: Callable, src: Object, msg: String, err_code: int = -1, is_expected: Callable = _empty_callable) -> void:
+	# This method checks if the code provided generates an error as expected.
+	# Params:
+	#   - code (Callable): Provided callable that is expected to generate an error when called.
+	#   - src (Object): The source object using this method
+	#   - msg (String): A custom error message to be displayed if the code provides unexpected errors or zero errors.
+	#   - err_code (int): An optional error code to be included in the error message (default: -1).
+	#   - is_expected (Callable): An optional callable, used to see if the error generated is the/an expected error.
+	# 
+	# Usage example:
+	#   var code = func() :
+	#      var player_level = -1
+	#      return Player.new("Player 1", player_level)
+	#   
+	#   var check = func(error: SimpleError) :
+	#      var code_check = error.err_code == 1
+	#      var msg_check = error.msg == "Player level must be in the range 0 to 100."
+	#      return code_check and msg_check
+	#   
+	#   # Make sure expected error happens:
+	#   var m = "Creating a Player instance with level = -1 should not work."
+	#   error_happens(code, self, m, ERR_BUG, check)
+	
 	# Setup:
 	on_error.connect(_error_happens_cache_func)
 	_error_happens_cache = []
