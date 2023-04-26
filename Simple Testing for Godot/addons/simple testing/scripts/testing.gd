@@ -2,7 +2,10 @@
 extends Node
 
 var _is_testing: bool = false # True while testing is happening. [For internal use]
-var _cached_errors: Array[String] # All errors since last `_collect_errors()` call. [For internal use]
+var _cached_errors: Array[SimpleError] # All errors since last `_collect_errors()` call. [For internal use]
+var _error_happens_cache: Array[SimpleError] # Stores errors during 'error_happens()' execution.
+
+signal on_error(simple_error: SimpleError)
 
 
 func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> void:
@@ -22,34 +25,68 @@ func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> vo
 	#
 	# When _is_testing is enabled, instead of raising errors, the errors are stored in the _cached_errors array.
 	
-	# Stringify the source's error:
-	var src_string: String = str(src)
-	if src is Node:
-		if src.is_inside_tree():
-			src_string = src.get_path()
-		else:
-			src_string = src.name
-	if src is Resource:
-		src_string = src.resource_path
+	# Return if check succeeded.
+	if condition: return
 	
-	# Create the error string:
-	var err_string
-	if not err_code == -1:
-		err_string = "Error(src: %s, msg: %s, err_code: %s)" % [src_string, msg, err_code]
-	else:
-		err_string = "Error(src: %s, msg: %s)" % [src_string, msg]
-	
-	if _is_testing and not condition:
+	# Generate error.
+	var error = SimpleError.new(src, msg, err_code)
+	if _is_testing:
 		# Cache the error:
-		_cached_errors.append(err_string)
+		_cached_errors.append(error)
+		on_error.emit(error)
 	else:
 		# When not testing, follow standard procedure for handling runtime errors:
-		assert(condition, err_string)
+		assert(false, error.to_string())
 
-func _collect_errors() -> Array[String]:
+
+func error_happens(code: Callable, src: Object, msg: String, err_code: int = -1, is_expected: Callable = _empty_callable) -> void:
+	# Setup:
+	on_error.connect(_error_happens_cache_func)
+	_error_happens_cache = []
+	var success = false
+	
+	# Run the code that is supposed to generate an error:
+	code.call()
+	if _error_happens_cache.size() == 1:
+		var cached_error = _error_happens_cache.front()
+		if is_expected == _empty_callable:
+			success = true
+		else:
+			# Use provided callable to check if the cached error is the/an expected one:
+			var result = is_expected.call(cached_error)
+			assert(result is bool, "'is_expected' needs to be a callable that returns a bool.")
+			success = result
+	
+	# Clean up:
+	on_error.disconnect(_error_happens_cache_func)
+	_error_happens_cache = []
+	
+	# Return if check succeeded.
+	if success: return
+	
+	# Generate error.
+	var error = SimpleError.new(src, msg, err_code)
+	if _is_testing:
+		# Cache the error:
+		_cached_errors.append(error)
+		on_error.emit(error)
+	else:
+		# When not testing, follow standard procedure for handling runtime errors:
+		assert(false, error.to_string())
+
+# Aux method for 'error_happens'.
+func _empty_callable():
+	pass
+
+# Aux method for 'error_happens'.
+func _error_happens_cache_func(simple_error: SimpleError) -> void:
+	# Simply stores the error string in the '_error_happens_cache' array.
+	_error_happens_cache.append(simple_error)
+
+
+func _collect_errors() -> Array[SimpleError]:
 	# Retrieves all cached errors and clears the cache.
 	# IMPORTANT: This is a method intended for internal use by the plugin.
 	var result = _cached_errors.duplicate()
 	_cached_errors.clear()
 	return result
-

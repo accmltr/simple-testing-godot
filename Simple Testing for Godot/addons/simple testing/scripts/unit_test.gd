@@ -6,6 +6,5 @@ func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> vo
 	# Plugin's version of 'assert()'
 	Testing.istrue(condition, src, msg, err_code)
 
-#func throws_error(code: Callable, ) -> void:
-#	# Ensures that the given code generates an error.
-	
+func error_happens(code: Callable, src: Object, msg: String, err_code: int = -1) -> void:
+	Testing.error_happens(code, src, msg, err_code)
