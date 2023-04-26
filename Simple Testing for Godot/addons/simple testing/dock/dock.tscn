@@ -1,6 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://u43yrdcachfs"]
 
 [sub_resource type="GDScript" id="GDScript_iyw2o"]
+resource_name = "dock"
 script/source = "@tool
 extends Control
 
@@ -29,7 +30,11 @@ func refresh_tree():
 	clear()
 	
 	# Create tree root:
-	create_item().set_text(0, _root_dir)
+	var root = create_item()
+	root.set_text(0, _root_dir)
+	
+	# Set root metadata 0 to false, indicating that its not a unit test:
+	root.set_metadata(0, false)
 	
 	_find_unit_tests()
 
@@ -57,6 +62,8 @@ func _find_unit_tests_recursive(path: String, parent: TreeItem = null) -> Array[
 		if dir.current_is_dir():
 			var new_parent = create_item(parent)
 			new_parent.set_text(0, file_name + \"/\")
+			# Metadata in column 0 is to indicate if item is a unit test:
+			new_parent.set_metadata(0, false)
 			var results = _find_unit_tests_recursive(full_path + \"/\", new_parent)
 			if results.is_empty():
 				parent.remove_child(new_parent)
@@ -68,11 +75,25 @@ func _find_unit_tests_recursive(path: String, parent: TreeItem = null) -> Array[
 				var file = FileAccess.open(full_path, FileAccess.READ)
 				if file.get_error() == OK:
 					var script_content = file.get_as_text()
+					
 					if \"extends UnitTest\" in script_content:
-						var tree_item = create_item(parent)
-						tree_item.set_text(0, file_name.split(\".\")[0])
-						tree_item.set_metadata(0, full_path)
+						# Create a TreeItem for the unit test:
+						var u_item = create_item(parent)
+						u_item.set_text(0, file_name.trim_suffix(\".gd\"))
+						# Metadata in column 0 is to indicate if item is a unit test:
+						u_item.set_metadata(0, true)
+						u_item.set_metadata(1, full_path)
 						unit_tests.append(full_path)
+						
+						# Create TreeItems for its tests:
+						var test_instance = _instance_script(full_path, $\"current test\")
+						for m in test_instance.get_method_list():
+							if m[\"name\"].begins_with(\"test_\"):
+								var m_item = create_item(u_item)
+								# Metadata in column 0 is to indicate if item is a unit test:
+								m_item.set_metadata(0, false)
+								m_item.set_text(0, m[\"name\"].trim_prefix(\"test_\"))
+						test_instance.queue_free()
 				else:
 					print(\"An error occurred when trying to read the file: \" + full_path)
 				file.close()
@@ -98,47 +119,79 @@ func run_all() -> void:
 	if not root: return
 	
 	# Create lambda that runs a given TreeItem's UnitTest:
-	var t_runner: Callable = func(tree_item: TreeItem):
-		var test_filepath = tree_item.get_metadata(0)
-		var test_instance = load(test_filepath).new() as UnitTest
-		test_instance.name = tree_item.get_text(0)
+	var t_runner: Callable = func(u_item: TreeItem) -> int:
+		var test_filepath = u_item.get_metadata(1)
+		var test_instance = _instance_script(test_filepath, $\"current test\")
+		test_instance.name = u_item.get_text(0)
 		
 		# Print which unit test script will run next:
-		$\"current test\".add_child(test_instance)
 		print(\"Runnings tests in \", test_instance.name + \".gd\")
 		Testing._is_testing = true
-		for m in test_instance.get_method_list():
-			var method_name = m[\"name\"]
-			if method_name.begins_with(\"test_\"):
-				print(\"    testing method: \", method_name)
-				test_instance.call(method_name)
-				var errors = Testing._collect_errors()
-				
-				if errors.is_empty():
-					tree_item.set_custom_color(0, Color.GREEN_YELLOW)
-				else:
-					tree_item.set_custom_color(0, Color.RED)
-				
-				# Print any errors that happened while running the test method:
-				for e in errors:
-					print(\"        \", e)
 		
+		var err_count: int = 0
+		
+		# Run all the unit test's methods and track the errors:
+		for m_item in u_item.get_children():
+			var m_name = m_item.get_text(0)
+			print(\"    testing method: \", m_name)
+			test_instance.call(\"test_\" + m_name)
+			var errors = Testing._collect_errors()
+			err_count += errors.size()
+			
+			# Color the method's tree item:
+			if errors.size() == 0:
+				m_item.set_custom_color(0, Color.GREEN_YELLOW)
+			else:
+				m_item.set_custom_color(0, Color.LIGHT_CORAL)
+				m_item.set_custom_color(1, Color.LIGHT_CORAL)
+				m_item.set_text(1, str(err_count))
+		
+		
+		# Color the unit test's tree item:
+		if err_count == 0:
+			u_item.set_custom_color(0, Color.GREEN_YELLOW)
+		else:
+			u_item.set_custom_color(0, Color.LIGHT_CORAL)
+			u_item.set_custom_color(1, Color.LIGHT_CORAL)
+			u_item.set_text(1, str(err_count))
+		
+		test_instance.queue_free()
+		return err_count
 	
 	# Run the function for all unit tests in tree:
 	_traverse_and_apply(t_runner, get_root())
 
-func _traverse_and_apply(f: Callable, start: TreeItem) -> void:
-	# Check 'start':
-	assert(start, \"No starting node provided.\")
+func _traverse_and_apply(f: Callable, node: TreeItem) -> int:
+	# Traverses 'node' and all its descendents, applying 'f' on any unit tests found.
+	
+	# Check 'node':
+	assert(node, \"No starting node provided.\")
 	
 	# End condition:
-	if start.get_child_count() == 0:
-		f.call(start)
-		return
+	if node.get_metadata(0):
+		return f.call(node)
 	
 	# Recursion:
-	for c in start.get_children():
-		_traverse_and_apply(f, c)
+	var err_count: int = 0
+	for c in node.get_children():
+		var n = _traverse_and_apply(f, c)
+		if n == 0:
+			node.set_custom_color(0, Color.GREEN_YELLOW)
+			node.set_collapsed_recursive(true)
+		else:
+			node.set_custom_color(0, Color.LIGHT_CORAL)
+			node.set_custom_color(1, Color.LIGHT_CORAL)
+			node.set_text(1, str(n))
+		err_count += n
+	
+	return err_count
+
+
+func _instance_script(script_path: String, parent: Node) -> Node:
+	var node = load(script_path).new()
+	node.name = Array(script_path.split(\"/\")).back().trim_suffix(\".gd\")
+	parent.add_child(node)
+	return node
 "
 
 [node name="Tests" type="Control"]
@@ -218,6 +271,7 @@ vertical_alignment = 1
 [node name="tests tree" type="Tree" parent="vbox"]
 layout_mode = 2
 size_flags_vertical = 3
+columns = 2
 hide_root = true
 script = SubResource("GDScript_d7864")
 
