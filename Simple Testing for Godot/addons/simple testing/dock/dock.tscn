@@ -5,14 +5,25 @@ resource_name = "dock"
 script/source = "@tool
 extends Control
 
+
 #@export var unit_test_tree: Tree
 var editor_interface: EditorInterface :
 	set(value):
 		editor_interface = value
 		value.get_resource_filesystem().filesystem_changed.connect(_on_filesystem_changed)
 
+var _loading_prefs: bool = false
+
+
+func _ready():
+	# Load unit tests:
+	$\"vbox/tests tree\".rebuild_tree()
+	
+	# Load user preferences:
+	_load_preferences()
+
 func _on_filesystem_changed():
-	if $\"vbox/commands/autorun check\".button_pressed:
+	if $\"vbox/heading/autorun check\".button_pressed:
 		$\"vbox/tests tree\".run_all()
 	else:
 		if $\"vbox/heading/autorefresh check\".button_pressed:
@@ -21,14 +32,51 @@ func _on_filesystem_changed():
 func _on_run_all_pressed():
 	$\"vbox/tests tree\".run_all()
 
-
 func _on_refresh_button_pressed():
 	$\"vbox/tests tree\".rebuild_tree()
 
+func _on_autorefresh_check_toggled(button_pressed):
+	if _loading_prefs: return
+	_save_preferences()
 
 func _on_autorun_check_toggled(button_pressed):
+	if _loading_prefs: return
 	if button_pressed:
 		$\"vbox/heading/autorefresh check\".button_pressed = true
+	else:
+		_save_preferences()
+
+
+func _save_preferences():
+	print(\"saving prefs\")
+	
+	# Create new ConfigFile object:
+	var config = ConfigFile.new()
+
+	# Store some values:
+	config.set_value(\"Settings\", \"auto-refresh\", $\"vbox/heading/autorefresh check\".button_pressed)
+	config.set_value(\"Settings\", \"auto-run\", $\"vbox/heading/autorun check\".button_pressed)
+
+	# Save it to a file (overwrite if already exists):
+	config.save(\"user://simple_testing.cfg\")
+
+func _load_preferences():
+	print(\"loading prefs\")
+	_loading_prefs = true
+	
+	# Load data from a file:
+	var config = ConfigFile.new()
+	var err = config.load(\"user://simple_testing.cfg\")
+	
+	# If the file didn't load, ignore it:
+	if err != OK:
+		return
+	
+	# Load the values:
+	$\"vbox/heading/autorefresh check\".button_pressed = config.get_value(\"Settings\", \"auto-refresh\", false)
+	$\"vbox/heading/autorun check\".button_pressed = config.get_value(\"Settings\", \"auto-run\", false)
+	
+	_loading_prefs = false
 "
 
 [sub_resource type="GDScript" id="GDScript_d7864"]
@@ -289,9 +337,9 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -222.0
+offset_left = -353.0
 offset_top = -13.0
-offset_right = -125.0
+offset_right = -256.0
 offset_bottom = 13.0
 grow_horizontal = 0
 grow_vertical = 2
@@ -301,6 +349,7 @@ If specified, all scripts inheriting from 'SimpleUnitTest' inside the given path
 
 If left empty, the entire project will be scanned by default."
 mouse_filter = 0
+theme_override_font_sizes/font_size = 13
 text = "Auto refresh"
 vertical_alignment = 1
 
@@ -311,12 +360,13 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -126.0
-offset_top = -12.0
-offset_right = -82.0
-offset_bottom = 12.0
+offset_left = -269.0
+offset_top = -11.0
+offset_right = -225.0
+offset_bottom = 13.0
 grow_horizontal = 0
 grow_vertical = 2
+button_pressed = true
 
 [node name="refresh button" type="Button" parent="vbox/heading"]
 layout_mode = 1
@@ -325,12 +375,60 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -68.0
+offset_left = -224.0
 offset_top = -15.5
+offset_right = -156.0
 offset_bottom = 15.5
 grow_horizontal = 0
 grow_vertical = 2
 text = "Refresh"
+
+[node name="autorun label" type="Label" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -145.0
+offset_right = -57.0
+grow_horizontal = 0
+grow_vertical = 2
+tooltip_text = "Relative path to the tests directory.
+
+If specified, all scripts inheriting from 'SimpleUnitTest' inside the given path and its sub-directories will be loaded for testing.
+
+If left empty, the entire project will be scanned by default."
+mouse_filter = 0
+theme_override_font_sizes/font_size = 13
+text = "Auto run"
+vertical_alignment = 1
+
+[node name="autorun check" type="CheckButton" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -84.0
+offset_top = -11.0
+offset_right = -40.0
+offset_bottom = 13.0
+grow_horizontal = 0
+grow_vertical = 2
+button_pressed = true
+
+[node name="run all" type="Button" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -39.0
+offset_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "Run"
 
 [node name="tests tree" type="Tree" parent="vbox"]
 layout_mode = 2
@@ -340,55 +438,8 @@ script = SubResource("GDScript_d7864")
 
 [node name="current test" type="Node" parent="vbox/tests tree"]
 
-[node name="commands" type="Control" parent="vbox"]
-custom_minimum_size = Vector2(0, 30)
-layout_mode = 2
-
-[node name="run all" type="Button" parent="vbox/commands"]
-layout_mode = 1
-anchors_preset = 11
-anchor_left = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -63.0
-grow_horizontal = 0
-grow_vertical = 2
-text = "Run All"
-
-[node name="autorun label" type="Label" parent="vbox/commands"]
-layout_mode = 1
-anchors_preset = 11
-anchor_left = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -190.0
-offset_right = -102.0
-grow_horizontal = 0
-grow_vertical = 2
-tooltip_text = "Relative path to the tests directory.
-
-If specified, all scripts inheriting from 'SimpleUnitTest' inside the given path and its sub-directories will be loaded for testing.
-
-If left empty, the entire project will be scanned by default."
-mouse_filter = 0
-text = "Auto run"
-vertical_alignment = 1
-
-[node name="autorun check" type="CheckButton" parent="vbox/commands"]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -123.0
-offset_top = -12.0
-offset_right = -79.0
-offset_bottom = 12.0
-grow_horizontal = 0
-grow_vertical = 2
-
 [connection signal="text_submitted" from="vbox/template element/LineEdit" to="." method="_on_line_edit_text_submitted"]
+[connection signal="toggled" from="vbox/heading/autorefresh check" to="." method="_on_autorefresh_check_toggled"]
 [connection signal="pressed" from="vbox/heading/refresh button" to="." method="_on_refresh_button_pressed"]
-[connection signal="pressed" from="vbox/commands/run all" to="." method="_on_run_all_pressed"]
-[connection signal="toggled" from="vbox/commands/autorun check" to="." method="_on_autorun_check_toggled"]
+[connection signal="toggled" from="vbox/heading/autorun check" to="." method="_on_autorun_check_toggled"]
+[connection signal="pressed" from="vbox/heading/run all" to="." method="_on_run_all_pressed"]
