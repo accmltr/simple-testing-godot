@@ -43,8 +43,7 @@ func _on_autorun_check_toggled(button_pressed):
 	if _loading_prefs: return
 	if button_pressed:
 		$\"vbox/heading/autorefresh check\".button_pressed = true
-	else:
-		_save_preferences()
+	_save_preferences()
 
 
 func _save_preferences():

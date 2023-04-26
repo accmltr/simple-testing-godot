@@ -52,3 +52,4 @@ func _collect_errors() -> Array[String]:
 	var result = _cached_errors.duplicate()
 	_cached_errors.clear()
 	return result
+
