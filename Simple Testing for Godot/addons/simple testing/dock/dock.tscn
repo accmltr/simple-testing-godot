@@ -203,6 +203,13 @@ func run_all() -> void:
 			test_instance.call(\"test_\" + m_name.trim_prefix(\"• \"))
 			var errors = Testing._collect_errors()
 			var n = errors.size()
+			
+			# Display the errors as children of the test node:
+			for e in errors:
+				var e_item = create_item(m_item)
+				e_item.set_text(0, e)
+				_update_item(e_item, -1)
+			
 			err_count += n
 			_update_item(m_item, n)
 		
@@ -242,7 +249,10 @@ func _update_item(item: TreeItem, err_count: int) -> void:
 		item.collapsed = true
 	else:
 		item.set_custom_color(0, Color.LIGHT_CORAL)
-		item.set_text(0, \"%s  ✘(%s)\" % [item.get_text(0), err_count])
+		if err_count == -1:
+			item.set_text(0, \"%s  ✘\" % item.get_text(0))
+		else:
+			item.set_text(0, \"%s  ✘(%s)\" % [item.get_text(0), err_count])
 #		item.set_custom_color(1, Color.LIGHT_CORAL)
 #		item.set_text(1, str(err_count))
 		item.collapsed = false
@@ -416,7 +426,6 @@ offset_right = -40.0
 offset_bottom = 13.0
 grow_horizontal = 0
 grow_vertical = 2
-button_pressed = true
 
 [node name="run all" type="Button" parent="vbox/heading"]
 layout_mode = 1
