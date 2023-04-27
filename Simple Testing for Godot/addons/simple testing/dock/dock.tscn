@@ -1,0 +1,454 @@
+[gd_scene load_steps=3 format=3 uid="uid://u43yrdcachfs"]
+
+[sub_resource type="GDScript" id="GDScript_iyw2o"]
+resource_name = "dock"
+script/source = "@tool
+extends Control
+
+
+#@export var unit_test_tree: Tree
+var editor_interface: EditorInterface :
+	set(value):
+		editor_interface = value
+		value.get_resource_filesystem().filesystem_changed.connect(_on_filesystem_changed)
+
+var _loading_prefs: bool = false
+
+
+func _ready():
+	# Load unit tests:
+	$\"vbox/tests tree\".rebuild_tree()
+	
+	# Load user preferences:
+	_load_preferences()
+
+func _on_filesystem_changed():
+	if $\"vbox/heading/autorun check\".button_pressed:
+		$\"vbox/tests tree\".run_all()
+	else:
+		if $\"vbox/heading/autorefresh check\".button_pressed:
+			$\"vbox/tests tree\".rebuild_tree()
+
+func _on_run_all_pressed():
+	$\"vbox/tests tree\".run_all()
+
+func _on_refresh_button_pressed():
+	$\"vbox/tests tree\".rebuild_tree()
+
+func _on_autorefresh_check_toggled(button_pressed):
+	if _loading_prefs: return
+	_save_preferences()
+
+func _on_autorun_check_toggled(button_pressed):
+	if _loading_prefs: return
+	if button_pressed:
+		$\"vbox/heading/autorefresh check\".button_pressed = true
+	_save_preferences()
+
+
+func _save_preferences():
+#	print(\"saving prefs\")
+	
+	# Create new ConfigFile object:
+	var config = ConfigFile.new()
+
+	# Store some values:
+	config.set_value(\"Settings\", \"auto-refresh\", $\"vbox/heading/autorefresh check\".button_pressed)
+	config.set_value(\"Settings\", \"auto-run\", $\"vbox/heading/autorun check\".button_pressed)
+
+	# Save it to a file (overwrite if already exists):
+	config.save(\"user://simple_testing.cfg\")
+
+func _load_preferences():
+#	print(\"loading prefs\")
+	_loading_prefs = true
+	
+	# Load data from a file:
+	var config = ConfigFile.new()
+	var err = config.load(\"user://simple_testing.cfg\")
+	
+	# If the file didn't load, ignore it:
+	if err != OK:
+		return
+	
+	# Load the values:
+	$\"vbox/heading/autorefresh check\".button_pressed = config.get_value(\"Settings\", \"auto-refresh\", false)
+	$\"vbox/heading/autorun check\".button_pressed = config.get_value(\"Settings\", \"auto-run\", false)
+	
+	_loading_prefs = false
+"
+
+[sub_resource type="GDScript" id="GDScript_d7864"]
+resource_name = "test tree"
+script/source = "@tool
+extends Tree
+
+var _root_dir = \"res://\"
+
+
+func rebuild_tree():
+	# Clear tree:
+	clear()
+	
+	# Create tree root:
+	var root = create_item()
+	root.set_text(0, _root_dir)
+	root.set_custom_color(0, Color.LIGHT_CYAN)
+	
+	# Set root metadata 0 to false, indicating that its not a unit test:
+	root.set_metadata(0, false)
+	
+	_find_unit_tests()
+
+
+func _find_unit_tests() -> Array[String]:
+	# Finds all the GDScript files in the project that inherit from the UnitTest class.
+	return _find_unit_tests_recursive(_root_dir, get_root())
+
+func _find_unit_tests_recursive(path: String, parent: TreeItem = null) -> Array[String]:
+	# Recursively searches for GDScript files that inherit from the UnitTest class in the given path.
+	
+	var unit_tests: Array[String] = []
+	
+	# Open given path:
+	var dir = DirAccess.open(path)
+	if not dir:
+		print(\"An error occurred when trying to access the path: \" + path)
+		return unit_tests
+	
+	# Recursively search for UnitTests and add them to the unit test tree:
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	while file_name != \"\":
+		var full_path = path + file_name
+		if dir.current_is_dir():
+			var new_parent = create_item(parent)
+			new_parent.set_text(0, file_name + \"/\")
+			new_parent.set_custom_color(0, Color.LIGHT_CYAN)
+			# Metadata in column 0 is to indicate if item is a unit test:
+			new_parent.set_metadata(0, false)
+			var results = _find_unit_tests_recursive(full_path + \"/\", new_parent)
+			if results.is_empty():
+				parent.remove_child(new_parent)
+			else:
+				for s in results:
+					unit_tests.append(s)
+		else:
+			if file_name.ends_with(\".gd\"):
+				var file = FileAccess.open(full_path, FileAccess.READ)
+				if file.get_error() == OK:
+					var script_content = file.get_as_text()
+					
+					if \"extends UnitTest\" in script_content:
+						# Create a TreeItem for the unit test:
+						var u_item = create_item(parent)
+						u_item.set_text(0, file_name.trim_suffix(\".gd\"))
+						u_item.set_custom_color(0, Color.LIGHT_CYAN)
+						# Metadata in column 0 is to indicate if item is a unit test:
+						u_item.set_metadata(0, true)
+						u_item.set_metadata(1, full_path)
+						unit_tests.append(full_path)
+						
+						# Create TreeItems for its tests:
+						var test_instance = _instance_script(full_path, $\"current test\")
+						for m in test_instance.get_method_list():
+							if m[\"name\"].begins_with(\"test_\"):
+								var m_item = create_item(u_item)
+								# Metadata in column 0 is to indicate if item is a unit test:
+								m_item.set_metadata(0, false)
+								m_item.set_text(0, \"• \" + m[\"name\"].trim_prefix(\"test_\"))
+								m_item.set_custom_color(0, Color.LIGHT_CYAN)
+						test_instance.queue_free()
+				else:
+					print(\"An error occurred when trying to read the file: \" + full_path)
+				file.close()
+		file_name = dir.get_next()
+	dir.list_dir_end()
+	
+	return unit_tests
+
+
+func _get_tree_item_child(tree_item: TreeItem, name: String) -> TreeItem:
+	for child in tree_item.get_children():
+		if child.get_text(0) == name:
+			return child
+	return null
+
+
+func run_all() -> void:
+	rebuild_tree()
+	
+	var root = get_root()
+	
+	# Return if tree empty:
+	if not root: return
+	
+	# Create lambda that runs a given TreeItem's UnitTest:
+	var t_runner: Callable = func(u_item: TreeItem) -> int:
+		var test_filepath = u_item.get_metadata(1)
+		var test_instance = _instance_script(test_filepath, $\"current test\")
+		test_instance.name = u_item.get_text(0)
+		
+		# Print which unit test script will run next:
+#		print(\"Runnings tests in \", test_instance.name + \".gd\")
+		Testing._is_testing = true
+		
+		var err_count: int = 0
+		
+		# Run all the unit test's methods and track the errors:
+		for m_item in u_item.get_children():
+			var m_name = m_item.get_text(0)
+#			print(\"    testing method: \", m_name)
+			test_instance.call(\"test_\" + m_name.trim_prefix(\"• \"))
+			var errors = Testing._collect_errors()
+			var n = errors.size()
+			
+			# Display the errors as children of the test node:
+			for e in errors:
+				var e_item = create_item(m_item)
+				e_item.set_text(0, e.output)
+				_update_item(e_item, -1)
+			
+			err_count += n
+			_update_item(m_item, n)
+		
+		
+		_update_item(u_item, err_count)
+		
+		test_instance.queue_free()
+		return err_count
+	
+	# Run the function for all unit tests in tree:
+	_traverse_and_apply(t_runner, get_root())
+
+func _traverse_and_apply(f: Callable, node: TreeItem) -> int:
+	# Traverses 'node' and all its descendents, applying 'f' on any unit tests found.
+	
+	# Check 'node':
+	assert(node, \"No starting node provided.\")
+	
+	# End condition:
+	if node.get_metadata(0):
+		return f.call(node)
+	
+	# Recursion:
+	var err_count: int = 0
+	for c in node.get_children():
+		var n = _traverse_and_apply(f, c)
+		err_count += n
+	
+	_update_item(node, err_count)
+	
+	return err_count
+
+func _update_item(item: TreeItem, err_count: int) -> void:
+	if err_count == 0:
+		item.set_custom_color(0, Color.GREEN_YELLOW)
+		item.set_text(0, \"%s  ✔\" % item.get_text(0))
+		item.collapsed = true
+	else:
+		item.set_custom_color(0, Color.LIGHT_CORAL)
+		if err_count == -1:
+			item.set_text(0, \"%s  ✘\" % item.get_text(0))
+		else:
+			item.set_text(0, \"%s  ✘(%s)\" % [item.get_text(0), err_count])
+#		item.set_custom_color(1, Color.LIGHT_CORAL)
+#		item.set_text(1, str(err_count))
+		item.collapsed = false
+
+
+func _instance_script(script_path: String, parent: Node) -> Node:
+	var node = load(script_path).new()
+	node.name = Array(script_path.split(\"/\")).back().trim_suffix(\".gd\")
+	parent.add_child(node)
+	return node
+"
+
+[node name="Tests" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_iyw2o")
+
+[node name="vbox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 5
+
+[node name="template element" type="Control" parent="vbox"]
+visible = false
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="vbox/template element"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+tooltip_text = "Relative path to the tests directory.
+
+If specified, all scripts inheriting from 'SimpleUnitTest' inside the given path and its sub-directories will be loaded for testing.
+
+If left empty, the entire project will be scanned by default."
+mouse_filter = 0
+text = "Tests Directory"
+vertical_alignment = 1
+
+[node name="LineEdit" type="LineEdit" parent="vbox/template element"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.125488
+grow_horizontal = 2
+grow_vertical = 2
+placeholder_text = "Test Folder"
+
+[node name="heading" type="Control" parent="vbox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="title" type="Label" parent="vbox/heading"]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_bottom = 1.0
+offset_right = 99.0
+grow_horizontal = 2
+grow_vertical = 2
+tooltip_text = "Relative path to the tests directory.
+
+If specified, all scripts inheriting from 'SimpleUnitTest' inside the given path and its sub-directories will be loaded for testing.
+
+If left empty, the entire project will be scanned by default."
+mouse_filter = 0
+text = " Test Tree"
+vertical_alignment = 1
+
+[node name="autorefresh label" type="Label" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -353.0
+offset_top = -13.0
+offset_right = -256.0
+offset_bottom = 13.0
+grow_horizontal = 0
+grow_vertical = 2
+tooltip_text = "Relative path to the tests directory.
+
+If specified, all scripts inheriting from 'SimpleUnitTest' inside the given path and its sub-directories will be loaded for testing.
+
+If left empty, the entire project will be scanned by default."
+mouse_filter = 0
+theme_override_font_sizes/font_size = 13
+text = "Auto refresh"
+vertical_alignment = 1
+
+[node name="autorefresh check" type="CheckButton" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -269.0
+offset_top = -11.0
+offset_right = -225.0
+offset_bottom = 13.0
+grow_horizontal = 0
+grow_vertical = 2
+button_pressed = true
+
+[node name="refresh button" type="Button" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -224.0
+offset_top = -15.5
+offset_right = -156.0
+offset_bottom = 15.5
+grow_horizontal = 0
+grow_vertical = 2
+text = "Refresh"
+
+[node name="autorun label" type="Label" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -145.0
+offset_right = -57.0
+grow_horizontal = 0
+grow_vertical = 2
+tooltip_text = "Relative path to the tests directory.
+
+If specified, all scripts inheriting from 'SimpleUnitTest' inside the given path and its sub-directories will be loaded for testing.
+
+If left empty, the entire project will be scanned by default."
+mouse_filter = 0
+theme_override_font_sizes/font_size = 13
+text = "Auto run"
+vertical_alignment = 1
+
+[node name="autorun check" type="CheckButton" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -84.0
+offset_top = -11.0
+offset_right = -40.0
+offset_bottom = 13.0
+grow_horizontal = 0
+grow_vertical = 2
+button_pressed = true
+
+[node name="run all" type="Button" parent="vbox/heading"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -39.0
+offset_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "Run"
+
+[node name="tests tree" type="Tree" parent="vbox"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+script = SubResource("GDScript_d7864")
+
+[node name="current test" type="Node" parent="vbox/tests tree"]
+
+[connection signal="text_submitted" from="vbox/template element/LineEdit" to="." method="_on_line_edit_text_submitted"]
+[connection signal="toggled" from="vbox/heading/autorefresh check" to="." method="_on_autorefresh_check_toggled"]
+[connection signal="pressed" from="vbox/heading/refresh button" to="." method="_on_refresh_button_pressed"]
+[connection signal="toggled" from="vbox/heading/autorun check" to="." method="_on_autorun_check_toggled"]
+[connection signal="pressed" from="vbox/heading/run all" to="." method="_on_run_all_pressed"]

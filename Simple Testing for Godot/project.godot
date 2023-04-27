@@ -16,7 +16,8 @@ config/icon="res://icon.png"
 
 [autoload]
 
-Testing="*res://addons/simple testing/testing.gd"
+Testing="*res://addons/simple testing/scripts/testing.gd"
+TestUtils="*res://addons/simple testing/scripts/test_utils.gd"
 
 [editor_plugins]
 
