@@ -21,15 +21,22 @@ var err_code: int :
 			err_code = value
 		else:
 			assert(false, "Tried to set immutable variable.")
+var output: String :
+	set(value):
+		if _initializing:
+			output = value
+		else:
+			assert(false, "Tried to set immutable variable.")
 
 func _init(src: Object, msg: String, err_code: int = -1):
 	_initializing = true
 	self.src = src
 	self.msg = msg
 	self.err_code = err_code
+	self.output = _get_output()
 	_initializing = false
 
-func to_string() -> String:
+func _get_output() -> String:
 	# Stringify the source's error:
 	var src_string: String = str(src)
 	if src is Node:

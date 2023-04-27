@@ -206,7 +206,7 @@ func run_all() -> void:
 			# Display the errors as children of the test node:
 			for e in errors:
 				var e_item = create_item(m_item)
-				e_item.set_text(0, e)
+				e_item.set_text(0, e.output)
 				_update_item(e_item, -1)
 			
 			err_count += n
@@ -425,6 +425,7 @@ offset_right = -40.0
 offset_bottom = 13.0
 grow_horizontal = 0
 grow_vertical = 2
+button_pressed = true
 
 [node name="run all" type="Button" parent="vbox/heading"]
 layout_mode = 1
