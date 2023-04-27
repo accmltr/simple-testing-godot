@@ -13,7 +13,7 @@ func test_error_happens():
 	
 	# with check callable:
 	var error_prone_code2 = func() :
-		istrue(1 == 3, self, "1 did not equal 3", 8)
+		istrue(1 == 1, self, "1 did not equal 3", 8)
 	
 	var check = func(e: SimpleError) :
 		return e.err_code == 8

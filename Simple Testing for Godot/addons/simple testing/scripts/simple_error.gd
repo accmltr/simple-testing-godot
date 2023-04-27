@@ -50,8 +50,8 @@ func _get_output() -> String:
 	# Create the error string:
 	var err_string
 	if not err_code == -1:
-		err_string = "Error(src: %s, msg: %s, err_code: %s)" % [src_string, msg, err_code]
+		err_string = "Error(src: \"%s\", msg: \"%s\", err_code: \"%s\")" % [src_string, msg, err_code]
 	else:
-		err_string = "Error(src: %s, msg: %s)" % [src_string, msg]
+		err_string = "Error(src: \"%s\", msg: \"%s\")" % [src_string, msg]
 	
 	return err_string
