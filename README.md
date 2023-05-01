@@ -31,14 +31,13 @@ A small testing framework for the Godot 4 game engine that simplifies the proces
 `istrue` has the following parameters:
 
 - `condition` (bool): The condition to be evaluated. If the condition is not true, an error will be logged.
-- `src` (Object): The source of the error, usually `self`.
 - `msg` (String): The error message to display if the condition is not true.
 - `err_code` (int, optional): An error code for the error, with a default value of -1.
 
 Example usage:
 
 ```gd
-istrue(result == 2, self, "Addition failed")
+istrue(result == 2, "Addition failed")
 ```
 
 #### error_happens
@@ -46,7 +45,6 @@ istrue(result == 2, self, "Addition failed")
 `error_happens` has the following parameters:
 
 - `code` (Callable): A Callable object that represents the code block that is expected to trigger an error.
-- `src` (Object): The source of the error, usually `self`.
 - `msg` (String): The error message to display if the expected error does not occur.
 - `err_code` (int, optional): An error code for the error, with a default value of -1.
 - `is_expected` (Callable, optional): A Callable object that takes a `SimpleError` object as its argument and returns a boolean. The function should return `true` if the error passed to it is the expected error. If not provided, the function defaults to returning `true` for any error.
@@ -56,18 +54,19 @@ Example usage:
 ```gd
 # without check callable:
 var error_prone_code = func():
-    istrue(0 == 10, self, "0 did not equal 10")
-error_happens(error_prone_code, self, "The error prone code did not have any errors")
+    istrue(0 == 10, "0 did not equal 10")
+error_happens(error_prone_code, "The error prone code did not have any errors")
 
 # with check callable:
 var error_prone_code_2 = func():
-    istrue(1 == 2, self, "1 did not equal 2", 8)
+    istrue(1 == 2, "1 did not equal 2", 8)
 
 var check = func(e: SimpleError):
     return e.err_code == 8
 
-error_happens(error_prone_code_2, self, "Expected error did not happen.", 1, check)
+error_happens(error_prone_code_2, "Expected error did not happen.", 1, check)
 ```
+
 
 ### Running Unit Tests
 
@@ -77,8 +76,7 @@ error_happens(error_prone_code_2, self, "Expected error did not happen.", 1, che
 
 ### Auto-Refresh and Auto-Run
 
-- Enable the `Auto-Refresh` checkbox to automatically rebuild the tree and display the available unit tests when changes are detected.
-- Enable the `Auto-Run` checkbox to automatically run all the unit tests when changes are detected.
+- Enable the `Auto-Refresh` checkbox to automatically rebuild the tree and
 
 ## Contributing
 
