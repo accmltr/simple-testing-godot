@@ -8,6 +8,9 @@ var _error_happens_cache: Array[SimpleError] # Stores errors during 'error_happe
 
 signal on_error(simple_error: SimpleError)
 
+func throw_error(src: Object, msg: String, err_code: int = -1) -> void:
+	var error = SimpleError.new(src, msg, err_code)
+	_handle_error(error)
 
 func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> void:
 	# Checks a given condition and triggers an error if it's not met.

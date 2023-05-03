@@ -2,6 +2,9 @@ extends Node
 
 class_name UnitTest
 
+func throw_error(msg: String, err_code: int = -1) -> void:
+	Testing.throw_error(self, msg, err_code)
+
 func istrue(condition: bool, msg: String, err_code: int = -1) -> void:
 	# Plugin's version of 'assert()'
 	Testing.istrue(condition, self, msg, err_code)
