@@ -2,7 +2,7 @@ extends Node
 
 class_name UnitTest
 
-func expect(expected: Object, found: Object, msg: String, err_code: int = -1,
+func expect(expected: Variant, found: Variant, msg: String, err_code: int = -1,
  equals: Callable = func(e, f): return e==f) -> void:
 	Testing.expect(expected, found, self, msg, err_code, equals)
 
