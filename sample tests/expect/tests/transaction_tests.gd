@@ -9,7 +9,8 @@ func test_add():
 	var t2 = Transaction.new(7, b, a)
 	var expected = Transaction.new(3, a, b)
 	var found = t1.add(t2)
+	var comparor = func(t1: Transaction, t2: Transaction):
+		return t1.equals(t2)
 	
 	var err_msg = ""
-	istrue(expected.equals(found), err_msg)
-	expect(expected, found, err_msg)
+	expect(expected, found, err_msg, -1, comparor)
