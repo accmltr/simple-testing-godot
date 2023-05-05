@@ -12,8 +12,9 @@ func throw_error(src: Object, msg: String, err_code: int = -1) -> void:
 	var error = SimpleError.new(src, msg, err_code)
 	_handle_error(error)
 
-func expect(expected: Object, found: Object, src: Object, msg: String, err_code: int = -1) -> void:
-	if not expected == found:
+func expect(expected: Object, found: Object, src: Object, msg: String, 
+ err_code: int = -1, equals: Callable = func(e, f): return e==f) -> void:
+	if not equals.call(expected, found):
 		var gen_msg = "expected: %s, found: %s" % [expected, found]
 		var error = SimpleError.new(src, msg, err_code, gen_msg)
 		_handle_error(error)
