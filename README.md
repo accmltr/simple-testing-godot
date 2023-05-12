@@ -78,7 +78,8 @@ error_happens(error_prone_code_2, "Expected error did not happen.", 1, check)
 
 ### Auto-Refresh and Auto-Run
 
-- Enable the `Auto-Refresh` checkbox to automatically rebuild the tree and
+- Enable the `Auto-Refresh` checkbox to automatically rebuild the tree upon saving.
+- Enable the `Auto-Run` checkbox to automatically run tests after saving.
 
 ## Contributing
 
