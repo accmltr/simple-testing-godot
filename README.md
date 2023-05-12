@@ -72,7 +72,9 @@ error_happens(error_prone_code_2, "Expected error did not happen.", 1, check)
 
 1. Open the `Simple Testing` dock within the Godot Editor.
 2. Click the `Refresh` button to rebuild the tree and display the available unit tests.
-3. Click the `Run All` button to run all the unit tests and view the results in the tree structure.
+3. Click the `Run` button to run all the unit tests and view the results in the tree structure.
+
+![Screenshot 2023-05-12 153452](https://github.com/accmltr/simple-testing-godot/assets/19354678/ac80f5f8-443d-4535-8dc1-b41f226cac5d)
 
 ### Auto-Refresh and Auto-Run
 
