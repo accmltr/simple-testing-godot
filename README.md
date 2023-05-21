@@ -12,10 +12,19 @@ A small testing framework for the Godot 4 game engine that simplifies the proces
 
 ## Installation
 
+### Basic
+
 1. Download or clone this repository into the `addons` directory of your Godot 4 project.
 2. In the Godot Editor, navigate to `Project` > `Project Settings` > `Plugins` and enable the `Simple Testing` plugin.
 
-**Note:** You can add this repo as a git submodule to your own git project.
+### Git Submodule
+
+To add the plugin as a git submodule to your git project, follow these steps.
+1. Navigate to your Godot project directory in your terminal.
+2. Run the command `git submodule add https://github.com/accmltr/simple-testing-godot.git addons/simple-testing-godot/`.
+3. Commit the changes to your git repository by running the command `git commit -m "Added Simple Testing plugin as a submodule."`.
+4. Open your Godot project and go to "Project/Project Settings/Plugins". Enable the "Simple Testing" plugin.
+5. Reload the Godot project by going to the "Project" menu and clicking on "Reload Current Project".
 
 ## Usage
 
