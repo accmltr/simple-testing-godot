@@ -23,8 +23,8 @@ To add the plugin as a git submodule to your git project, follow these steps.
 1. Navigate to your Godot project directory in your terminal.
 2. Run the command `git submodule add https://github.com/accmltr/simple-testing-godot.git addons/simple-testing-godot/`.
 3. Commit the changes to your git repository by running the command `git commit -m "Added Simple Testing plugin as a submodule."`.
-4. Open your Godot project and go to "Project/Project Settings/Plugins". Enable the "Simple Testing" plugin.
-5. Reload the Godot project by going to the "Project" menu and clicking on "Reload Current Project".
+4. Open your Godot project and go to `Project/Project Settings/Plugins`. Enable the "Simple Testing" plugin.
+5. Reload the Godot project by going to the `Project` menu and clicking on `Reload Current Project`.
 
 ## Usage
 
@@ -76,7 +76,6 @@ var check = func(e: SimpleError):
 error_happens(error_prone_code_2, "Expected error did not happen.", 1, check)
 ```
 
-
 ### Running Unit Tests
 
 1. Open the `Simple Testing` dock within the Godot Editor.
@@ -89,6 +88,13 @@ error_happens(error_prone_code_2, "Expected error did not happen.", 1, check)
 
 - Enable the `Auto-Refresh` checkbox to automatically rebuild the tree upon saving.
 - Enable the `Auto-Run` checkbox to automatically run tests after saving.
+
+### Autoloads
+
+- When using autoloads in your tests you need to annotate them with the`@tool` annotation at the top of the autoload scripts. This will make it possible for your testing code to access them when running from within the Godot Editor.
+- When making any changes to autoload scripts, you need to reload your Godot project for the changes to take effect. Since Godot compiles `@tool` scripts when loading the project. To reload your project, go to `Project/Reload Current Project`.
+
+Note: We inted to improve the plugin by running all tests in play-mode in the future. This will remove the need for annotating autoloads used by your unit tests with `@tool`, and the need to reload your project whenever you make changes to your autoloads.
 
 ## Contributing
 
