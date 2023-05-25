@@ -1,9 +1,17 @@
-<mxfile host="Electron" modified="2023-05-24T00:03:09.698Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="RctxZh4bS_dvR_QGkujY" version="21.2.8" type="device" pages="2">
+<mxfile host="Electron" modified="2023-05-25T02:39:56.010Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="coEzVkhpJ8596ruUdJ8g" version="21.2.8" type="device" pages="2">
   <diagram name="Class Diagram" id="6y82QvWqDyoeqdexZ-E8">
     <mxGraphModel dx="1962" dy="1407" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" background="#FFFFFF" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <mxCell id="i5709W2-B1kpcJ32isYm-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;endArrow=diamond;endFill=1;" edge="1" parent="1" source="tM5TyMosLTcsv8V2hco5-1" target="i5709W2-B1kpcJ32isYm-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="560" y="-93" />
+              <mxPoint x="275" y="-93" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
         <mxCell id="tM5TyMosLTcsv8V2hco5-1" value="UnitTestScene" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=33;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=16;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;swimlaneFillColor=default;" parent="1" vertex="1">
           <mxGeometry x="454" y="-36" width="211" height="93" as="geometry" />
         </mxCell>
@@ -24,17 +32,37 @@
         <mxCell id="tM5TyMosLTcsv8V2hco5-14" value="Lets the TestRunner know that the test is finished via the `on_test_exit` signal." style="whiteSpace=wrap;html=1;fontSize=14;fillColor=#FFF599;strokeColor=#d6b656;spacingLeft=10;spacingBottom=10;spacingRight=10;spacingTop=10;fontColor=#331A00;" parent="1" vertex="1">
           <mxGeometry x="771" y="18" width="174" height="106" as="geometry" />
         </mxCell>
-        <mxCell id="J8-6YeeYZxeiOP6BvH8y-1" value="UnitTest" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=33;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=16;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;swimlaneFillColor=default;" vertex="1" parent="1">
-          <mxGeometry x="162" y="-36" width="211" height="59" as="geometry" />
+        <mxCell id="i5709W2-B1kpcJ32isYm-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;endArrow=diamond;endFill=1;" edge="1" parent="1" source="J8-6YeeYZxeiOP6BvH8y-1" target="i5709W2-B1kpcJ32isYm-1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="275" y="-91" />
+              <mxPoint x="275" y="-91" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-        <mxCell id="J8-6YeeYZxeiOP6BvH8y-4" value="*+ test_*()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=16;" vertex="1" parent="J8-6YeeYZxeiOP6BvH8y-1">
-          <mxGeometry y="33" width="211" height="26" as="geometry" />
+        <mxCell id="J8-6YeeYZxeiOP6BvH8y-1" value="UnitTest" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=33;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=16;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;swimlaneFillColor=default;" parent="1" vertex="1">
+          <mxGeometry x="175" y="-36" width="211" height="67" as="geometry" />
         </mxCell>
-        <mxCell id="J8-6YeeYZxeiOP6BvH8y-6" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="J8-6YeeYZxeiOP6BvH8y-5" target="J8-6YeeYZxeiOP6BvH8y-4">
+        <mxCell id="i5709W2-B1kpcJ32isYm-4" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;fontSize=16;" vertex="1" parent="J8-6YeeYZxeiOP6BvH8y-1">
+          <mxGeometry y="33" width="211" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="J8-6YeeYZxeiOP6BvH8y-4" value="*+ test_*()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=16;" parent="J8-6YeeYZxeiOP6BvH8y-1" vertex="1">
+          <mxGeometry y="41" width="211" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="J8-6YeeYZxeiOP6BvH8y-6" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=12;startSize=8;endSize=8;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="J8-6YeeYZxeiOP6BvH8y-5" target="J8-6YeeYZxeiOP6BvH8y-4" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="J8-6YeeYZxeiOP6BvH8y-5" value="Run any methods found with the &quot;test_&quot; prefix" style="whiteSpace=wrap;html=1;fontSize=14;fillColor=#FFF599;strokeColor=#d6b656;spacingLeft=10;spacingBottom=10;spacingRight=10;spacingTop=10;fontColor=#331A00;" vertex="1" parent="1">
+        <mxCell id="J8-6YeeYZxeiOP6BvH8y-5" value="Run any methods found with the &quot;test_&quot; prefix" style="whiteSpace=wrap;html=1;fontSize=14;fillColor=#FFF599;strokeColor=#d6b656;spacingLeft=10;spacingBottom=10;spacingRight=10;spacingTop=10;fontColor=#331A00;" parent="1" vertex="1">
           <mxGeometry x="-72" y="-13" width="153" height="106" as="geometry" />
+        </mxCell>
+        <mxCell id="i5709W2-B1kpcJ32isYm-1" value="TestRunner" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=33;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontSize=16;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;swimlaneFillColor=default;" vertex="1" parent="1">
+          <mxGeometry x="169" y="-213" width="211" height="67" as="geometry" />
+        </mxCell>
+        <mxCell id="i5709W2-B1kpcJ32isYm-3" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;fontSize=16;" vertex="1" parent="i5709W2-B1kpcJ32isYm-1">
+          <mxGeometry y="33" width="211" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="i5709W2-B1kpcJ32isYm-2" value="+ run_all()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;fontSize=16;" vertex="1" parent="i5709W2-B1kpcJ32isYm-1">
+          <mxGeometry y="41" width="211" height="26" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
