@@ -50,8 +50,10 @@ func _get_test_scenes(path: String = PATH) -> Array[PackedScene]:
 			
 			for t in sub_t_scenes:
 				test_scenes.append(t)
+			
 		elif file_name.ends_with(".tscn"):
-			test_scenes.append(full_path)
+			var s = ResourceLoader.load(full_path)
+			test_scenes.append(s)
 		
 		file_name = dir.get_next()
 	

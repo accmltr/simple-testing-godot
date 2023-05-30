@@ -7,6 +7,8 @@ var _is_expecting_errors: bool = false # Used by 'error_happens'
 var _cached_errors: Array[SimpleError] # All errors since last `_collect_errors()` call. [For internal use]
 var _error_happens_cache: Array[SimpleError] # Stores errors during 'error_happens()' execution.
 
+signal on_error(simple_error: SimpleError)
+
 func throw_error(src: Object, msg: String, err_code: int = -1) -> void:
 	var error = SimpleError.new(src, msg, err_code)
 	_handle_error(error)
