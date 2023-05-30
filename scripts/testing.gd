@@ -7,6 +7,14 @@ var _cached_errors: Array[SimpleError] # All errors since last `_collect_errors(
 var _error_happens_cache: Array[SimpleError] # Stores errors during 'error_happens()' execution.
 
 signal on_error(simple_error: SimpleError)
+signal on_test_runner(test_runner: TestRunner)
+signal testing_complete(results)
+
+func _ready():
+	on_test_runner.connect(f)
+
+func f(tr):
+	print("TR start recieved.")
 
 func throw_error(src: Object, msg: String, err_code: int = -1) -> void:
 	var error = SimpleError.new(src, msg, err_code)
