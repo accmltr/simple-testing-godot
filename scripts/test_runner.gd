@@ -10,15 +10,11 @@ signal finished()
 func _ready():
 	started.emit()
 	
-	
-	var tests: Array[PackedScene] = []
-	
-	for t in tests:
+	for t in _get_test_scenes():
 		var o = t.instantiate()
 		o.tree_exited.connect(_on_test_free.bind(t.resource_name))
 		add_child(o)
 		test_started.emit(t.resource_name)
-
 
 func _on_test_free(test_name: String):
 	var errors = Testing._collect_errors()
@@ -28,3 +24,6 @@ func _on_test_free(test_name: String):
 	
 	if get_children().size() == 0:
 		finished.emit()
+
+func _get_test_scenes() -> Array[PackedScene]:
+	return []
