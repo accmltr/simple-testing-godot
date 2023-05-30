@@ -15,11 +15,10 @@ var editor_interface: EditorInterface :
 var _loading_prefs: bool = false
 
 
+func _enter_tree():
+	Testing._dock = self
+
 func _ready():
-	
-	Testing.on_test_runner.connect(_on_test_runner_start)
-	Testing.testing_complete.connect(_on_testing_complete)
-	
 	# Load unit tests:
 	$\"vbox/tests tree\".rebuild_tree()
 	

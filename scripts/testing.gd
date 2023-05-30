@@ -1,20 +1,11 @@
 @tool
 extends Node
 
+var _dock: Node
 var _is_testing: bool = false # True while testing is happening. [For internal use]
 var _is_expecting_errors: bool = false # Used by 'error_happens'
 var _cached_errors: Array[SimpleError] # All errors since last `_collect_errors()` call. [For internal use]
 var _error_happens_cache: Array[SimpleError] # Stores errors during 'error_happens()' execution.
-
-signal on_error(simple_error: SimpleError)
-signal on_test_runner(test_runner: TestRunner)
-signal testing_complete(results)
-
-func _ready():
-	on_test_runner.connect(f)
-
-func f(tr):
-	print("TR start recieved.")
 
 func throw_error(src: Object, msg: String, err_code: int = -1) -> void:
 	var error = SimpleError.new(src, msg, err_code)
@@ -48,7 +39,6 @@ func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> vo
 	if not condition:
 		var error = SimpleError.new(src, msg, err_code)
 		_handle_error(error)
-
 
 func error_happens(code: Callable, src: Object, msg: String, err_code: int = -1, is_expected: Callable = func(x):return true) -> void:
 	# This method checks if the code provided generates an error as expected.
@@ -127,3 +117,5 @@ func _collect_errors() -> Array[SimpleError]:
 	var result = _cached_errors.duplicate()
 	_cached_errors.clear()
 	return result
+
+func _on_test_runner_completed()
