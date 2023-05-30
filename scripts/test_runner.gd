@@ -9,6 +9,8 @@ signal test_started(test_name: String)
 signal test_finished(test_name: String, passed: bool)
 signal finished()
 
+var _alive: Array[String]
+
 func _ready():
 	started.emit()
 	
@@ -16,18 +18,26 @@ func _ready():
 	
 	for t in _get_test_scenes():
 		var o = t.instantiate()
-		o.tree_exited.connect(_on_test_free.bind(t.resource_name))
+		var id = t.resource_path
+		o.tree_exited.connect(_on_test_free.bind(id))
 		add_child(o)
-		test_started.emit(t.resource_name)
+		_alive.append(id)
+		test_started.emit(id)
+		print("Test scene started: ", id)
 
-func _on_test_free(test_name: String):
+func _on_test_free(test_id: String):
+	print("Done with test scene: ", test_id)
 	var errors = Testing._collect_errors()
 	if errors.size() > 0:
-		test_finished.emit(test_name, false)
-	test_finished.emit(test_name, true)
+		test_finished.emit(test_id, false)
+	_alive.remove_at(_alive.find(test_id))
+	test_finished.emit(test_id, true)
 	
-	if get_children().size() == 0:
+	if _alive.is_empty():
 		finished.emit()
+		get_tree().quit()
+	else:
+		print("Tests remaining: ", _alive.size())
 
 func _get_test_scenes(path: String = PATH) -> Array[PackedScene]:
 	var test_scenes: Array[PackedScene] = []
