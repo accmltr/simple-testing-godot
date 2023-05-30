@@ -117,5 +117,3 @@ func _collect_errors() -> Array[SimpleError]:
 	var result = _cached_errors.duplicate()
 	_cached_errors.clear()
 	return result
-
-func _on_test_runner_completed()
