@@ -10,6 +10,7 @@ signal test_finished(test_name: String, passed: bool)
 signal finished()
 
 var _alive: Array[String]
+var _quite_queued: bool = false
 
 func _ready():
 	started.emit()
@@ -26,18 +27,23 @@ func _ready():
 		test_started.emit(id)
 		print("Test scene started: ", id)
 
+func _process(_delta):
+	if _quite_queued:
+		get_tree().quit()
+
 func _on_test_free(test_id: String):
 	var errors = Testing._collect_errors()
 	if errors.size() > 0:
 		test_finished.emit(test_id, false)
 	_alive.remove_at(_alive.find(test_id))
 	test_finished.emit(test_id, true)
-	print("Done with test scene: ", test_id, ", result: ", errors.is_empty())
+	print("Done with test scene: ", _file_name_from(test_id), ", result: ", errors.is_empty())
 	
 	if _alive.is_empty():
+		print("ending play-mode tests")
 		Testing._is_testing = false
 		finished.emit()
-		get_tree().quit()
+		_quite_queued = true
 	else:
 		print("Tests remaining: ", _alive.size())
 
@@ -71,3 +77,10 @@ func _get_test_scenes(path: String = PATH) -> Array[PackedScene]:
 	
 	dir.list_dir_end()
 	return test_scenes
+
+func _file_name_from(path: String) -> String:
+	return path.split("/")[-1]
+
+
+
+
