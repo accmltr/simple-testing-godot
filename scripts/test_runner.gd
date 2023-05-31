@@ -13,6 +13,7 @@ var _alive: Array[String]
 
 func _ready():
 	started.emit()
+	Testing._is_testing = true
 	
 	print(_get_test_scenes())
 	
@@ -26,14 +27,15 @@ func _ready():
 		print("Test scene started: ", id)
 
 func _on_test_free(test_id: String):
-	print("Done with test scene: ", test_id)
 	var errors = Testing._collect_errors()
 	if errors.size() > 0:
 		test_finished.emit(test_id, false)
 	_alive.remove_at(_alive.find(test_id))
 	test_finished.emit(test_id, true)
+	print("Done with test scene: ", test_id, ", result: ", errors.is_empty())
 	
 	if _alive.is_empty():
+		Testing._is_testing = false
 		finished.emit()
 		get_tree().quit()
 	else:
