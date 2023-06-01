@@ -10,7 +10,7 @@ func _enter_tree():
 	add_autoload_singleton("TestUtils", "res://addons/simple-testing-godot/scripts/test_utils.gd")
 	
 	# Load editor dock:
-	dock = load("res://addons/simple-testing-godot/dock/dock.tscn").instantiate()
+	dock = load("res://addons/simple-testing-godot/scenes/dock.tscn").instantiate()
 	dock.editor_interface = get_editor_interface()
 	add_control_to_dock(EditorPlugin.DOCK_SLOT_LEFT_UR, dock)
 

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://q0mnb50wrup"]
+
+[ext_resource type="Script" path="res://addons/simple-testing-godot/scripts/test_runner.gd" id="1_6l8eo"]
+
+[node name="test_runner" type="Node"]
+script = ExtResource("1_6l8eo")

@@ -14,7 +14,6 @@ var editor_interface: EditorInterface :
 
 var _loading_prefs: bool = false
 
-
 func _ready():
 	# Load unit tests:
 	$\"vbox/tests tree\".rebuild_tree()
@@ -31,6 +30,9 @@ func _on_filesystem_changed():
 
 func _on_run_all_pressed():
 	$\"vbox/tests tree\".run_all()
+
+func _on_run_play_tests_pressed():
+	editor_interface.play_custom_scene(\"res://addons/simple-testing-godot/scenes/test_runner.tscn\")
 
 func _on_refresh_button_pressed():
 	$\"vbox/tests tree\".rebuild_tree()
@@ -76,6 +78,14 @@ func _load_preferences():
 	$\"vbox/heading/autorun check\".button_pressed = config.get_value(\"Settings\", \"auto-run\", false)
 	
 	_loading_prefs = false
+
+func _on_test_runner_start(test_runner: TestRunner) -> void:
+	print(\"test runner started\")
+
+func _on_testing_complete(results) -> void:
+	editor_interface.stop_playing_scene()
+	print(\"Test Runner finished. Results:\")
+	print(results)
 "
 
 [sub_resource type="GDScript" id="GDScript_d7864"]
@@ -206,7 +216,7 @@ func run_all() -> void:
 			# Display the errors as children of the test node:
 			for e in errors:
 				var e_item = create_item(m_item)
-				e_item.set_text(0, e.output)
+				e_item.set_text(0, e.to_string())
 				_update_item(e_item, -1)
 			
 			err_count += n
@@ -447,8 +457,25 @@ script = SubResource("GDScript_d7864")
 
 [node name="current test" type="Node" parent="vbox/tests tree"]
 
+[node name="footer" type="Control" parent="vbox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="run_play_tests" type="Button" parent="vbox/footer"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -39.0
+offset_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "Run Play Tests"
+
 [connection signal="text_submitted" from="vbox/template element/LineEdit" to="." method="_on_line_edit_text_submitted"]
 [connection signal="toggled" from="vbox/heading/autorefresh check" to="." method="_on_autorefresh_check_toggled"]
 [connection signal="pressed" from="vbox/heading/refresh button" to="." method="_on_refresh_button_pressed"]
 [connection signal="toggled" from="vbox/heading/autorun check" to="." method="_on_autorun_check_toggled"]
 [connection signal="pressed" from="vbox/heading/run all" to="." method="_on_run_all_pressed"]
+[connection signal="pressed" from="vbox/footer/run_play_tests" to="." method="_on_run_play_tests_pressed"]
