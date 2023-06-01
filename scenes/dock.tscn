@@ -216,7 +216,7 @@ func run_all() -> void:
 			# Display the errors as children of the test node:
 			for e in errors:
 				var e_item = create_item(m_item)
-				e_item.set_text(0, e.output)
+				e_item.set_text(0, e.to_string())
 				_update_item(e_item, -1)
 			
 			err_count += n

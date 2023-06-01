@@ -109,7 +109,7 @@ func _handle_error(simple_error: SimpleError) -> void:
 		_cached_errors.append(simple_error)
 	else:
 		# When not testing, follow standard procedure for handling runtime errors:
-		assert(false, simple_error.output)
+		assert(false, simple_error.to_string())
 	
 	on_error.emit(simple_error)
 

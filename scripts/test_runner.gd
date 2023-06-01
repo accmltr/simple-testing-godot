@@ -41,6 +41,8 @@ func _on_test_free(test_id: String):
 	if errors.size() > 0:
 		test_finished.emit(test_id, false)
 		print("✘ ", test_id)
+		for e in errors:
+			print("   -", e)
 	else:
 		test_finished.emit(test_id, true)
 		print("✔ ", test_id)
