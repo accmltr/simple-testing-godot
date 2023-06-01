@@ -2,7 +2,7 @@ extends Node
 
 class_name TestRunner
 
-const PATH = "res://tests/test scenes/"
+const PATH = "res://tests/test_scenes/"
 
 signal started()
 signal test_started(test_name: String)
