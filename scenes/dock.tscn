@@ -14,10 +14,6 @@ var editor_interface: EditorInterface :
 
 var _loading_prefs: bool = false
 
-
-func _enter_tree():
-	Testing._dock = self
-
 func _ready():
 	# Load unit tests:
 	$\"vbox/tests tree\".rebuild_tree()
