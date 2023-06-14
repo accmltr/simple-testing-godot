@@ -20,15 +20,14 @@ func _ready():
 	print("Running Play-Mode Tests")
 	print("----------------------------------------------")
 	
-	for t in _get_test_scenes():
+	for t in _get_test_scenes() as Array[PlayModeTest]:
 		var o = t.instantiate()
 		var id = t.resource_path
+		o.set_test_id(id)
 		o.tree_exited.connect(_on_test_free.bind(id))
 		add_child(o)
 		_alive.append(id)
 		test_started.emit(id)
-		print("-> ", id)
-	print("----------------------------------------------")
 
 func _process(_delta):
 	if _quite_queued && _quite_frame_counter > 0:
@@ -37,11 +36,11 @@ func _process(_delta):
 			get_tree().quit()
 
 func _on_test_free(test_id: String):
-	var errors = Testing._collect_errors()
+	var errors = Testing._collect_errors_by_id(test_id)
 	if errors.size() > 0:
 		test_finished.emit(test_id, false)
 		print("✘ ", test_id)
-		for e in errors:
+		for e in errors.values():
 			print("   -", e)
 	else:
 		test_finished.emit(test_id, true)
@@ -54,8 +53,6 @@ func _on_test_free(test_id: String):
 		Testing._is_testing = false
 		finished.emit()
 		_quite_queued = true
-#	else:
-#		print("Tests remaining: ", _alive.size())
 
 func _get_test_scenes(path: String = PATH) -> Array[PackedScene]:
 	var test_scenes: Array[PackedScene] = []

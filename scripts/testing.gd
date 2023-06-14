@@ -6,21 +6,23 @@ var _is_testing: bool = false # True while testing is happening. [For internal u
 var _is_expecting_errors: bool = false # Used by 'error_happens'
 var _cached_errors: Array[SimpleError] # All errors since last `_collect_errors()` call. [For internal use]
 var _error_happens_cache: Array[SimpleError] # Stores errors during 'error_happens()' execution.
+var _cached_errors_by_id: Dictionary = {} # TEMPORARY. This is a temp. replacement for _cached_errors when
+# doing play mode testing.
 
 signal on_error(simple_error: SimpleError)
 
-func throw_error(src: Object, msg: String, err_code: int = -1) -> void:
+func throw_error(src: Variant, msg: String, err_code: int = -1) -> void:
 	var error = SimpleError.new(src, msg, err_code)
 	_handle_error(error)
 
-func expect(expected: Variant, found: Variant, src: Object, msg: String, 
+func expect(expected: Variant, found: Variant, src: Variant, msg: String, 
  err_code: int = -1, equals: Callable = func(e, f): return e==f) -> void:
 	if not equals.call(expected, found):
 		var gen_msg = "expected: %s, found: %s" % [expected, found]
 		var error = SimpleError.new(src, msg, err_code, gen_msg)
 		_handle_error(error)
 
-func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> void:
+func istrue(condition: bool, src: Variant, msg: String, err_code: int = -1) -> void:
 	# Checks a given condition and triggers an error if it's not met.
 	# 
 	# This method is designed to provide more context about the error's source and display a custom error message
@@ -42,7 +44,7 @@ func istrue(condition: bool, src: Object, msg: String, err_code: int = -1) -> vo
 		var error = SimpleError.new(src, msg, err_code)
 		_handle_error(error)
 
-func error_happens(code: Callable, src: Object, msg: String, err_code: int = -1, is_expected: Callable = func(x):return true) -> void:
+func error_happens(code: Callable, src: Variant, msg: String, err_code: int = -1, is_expected: Callable = func(x):return true) -> void:
 	# This method checks if the code provided generates an error as expected.
 	# Params:
 	#   - code (Callable): Provided callable that is expected to generate an error when called.
@@ -107,6 +109,7 @@ func _handle_error(simple_error: SimpleError) -> void:
 		_error_happens_cache.append(simple_error)
 	elif _is_testing:
 		_cached_errors.append(simple_error)
+		_cached_errors_by_id[simple_error.src] = simple_error
 	else:
 		# When not testing, follow standard procedure for handling runtime errors:
 		assert(false, simple_error.to_string())
@@ -118,4 +121,13 @@ func _collect_errors() -> Array[SimpleError]:
 	# IMPORTANT: This is a method intended for internal use by the plugin.
 	var result = _cached_errors.duplicate()
 	_cached_errors.clear()
+	_cached_errors_by_id.clear()
 	return result
+
+# TEMPORARY. Used when running play mode tests in parallel. This way errors are collected based on
+# `src`, and not completion time.
+func _collect_errors_by_id(id) -> Dictionary:
+	if not _cached_errors_by_id.has(id): return {}
+	var result = _cached_errors_by_id[id]
+	_cached_errors_by_id.erase(id)
+	return _cached_errors_by_id

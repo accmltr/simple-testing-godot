@@ -3,7 +3,7 @@ extends Resource
 class_name SimpleError
 
 var _initializing: bool = false
-var src: Object :
+var src: Variant :
 	set(value):
 		if _initializing:
 			src = value
@@ -28,7 +28,7 @@ var gen_msg: String :
 		else:
 			assert(false, "Tried to set immutable variable.")
 
-func _init(src: Object, msg: String, err_code: int = -1, gen_msg: String = ""):
+func _init(src: Variant, msg: String, err_code: int = -1, gen_msg: String = ""):
 	_initializing = true
 	self.src = src
 	self.msg = msg
