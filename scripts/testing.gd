@@ -109,7 +109,10 @@ func _handle_error(simple_error: SimpleError) -> void:
 		_error_happens_cache.append(simple_error)
 	elif _is_testing:
 		_cached_errors.append(simple_error)
-		_cached_errors_by_id[simple_error.src] = simple_error
+		var id = simple_error.src
+		if not _cached_errors_by_id.has(id):
+			_cached_errors_by_id[id] = [] as Array[SimpleError]
+		_cached_errors_by_id[id].append(simple_error)
 	else:
 		# When not testing, follow standard procedure for handling runtime errors:
 		assert(false, simple_error.to_string())
@@ -126,8 +129,8 @@ func _collect_errors() -> Array[SimpleError]:
 
 # TEMPORARY. Used when running play mode tests in parallel. This way errors are collected based on
 # `src`, and not completion time.
-func _collect_errors_by_id(id) -> Dictionary:
-	if not _cached_errors_by_id.has(id): return {}
+func _collect_errors_by_id(id) -> Array[SimpleError]:
+	if not _cached_errors_by_id.has(id): return []
 	var result = _cached_errors_by_id[id]
 	_cached_errors_by_id.erase(id)
-	return _cached_errors_by_id
+	return result
