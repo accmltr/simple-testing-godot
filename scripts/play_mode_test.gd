@@ -14,6 +14,9 @@ var id: String :
 func set_test_id(id):
 	_test_id = id
 
+func delayed(delay: float, code: Callable):
+	get_tree().create_timer(delay, false, true).timeout.connect(code)
+
 func expect(expected: Variant, found: Variant, msg: String, err_code: int = -1,
  equals: Callable = func(e, f): return e==f) -> void:
 	Testing.expect(expected, found, _test_id, msg, err_code, equals)
