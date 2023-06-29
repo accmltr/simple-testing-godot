@@ -87,7 +87,7 @@ func error_happens(code: Callable, src: Variant, msg: String, err_code: int = -1
 	_is_expecting_errors = false
 	_error_happens_cache = []
 	
-	if not success:	
+	if not success:
 		# Generate error.
 		var error = SimpleError.new(src, msg, err_code)
 		_handle_error(error)
