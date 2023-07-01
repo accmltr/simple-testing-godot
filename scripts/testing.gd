@@ -76,12 +76,13 @@ func error_happens(code: Callable, src: Variant, msg: String, err_code: int = -1
 	# Run the code that is supposed to generate an error:
 	code.call()
 	if _error_happens_cache.size() > 0:
-		var cached_error = _error_happens_cache.front()
-		
-		# Use provided callable to check if the cached error is the/an expected one:
-		var result = is_expected.call(cached_error)
-		assert(result is bool, "'is_expected' needs to be a callable that returns a bool.")
-		success = result
+		for cached_error in _error_happens_cache:
+			# Use provided callable to check if the cached error is the/an expected one:
+			var result = is_expected.call(cached_error)
+			assert(result is bool, "'is_expected' needs to be a callable that returns a bool.")
+			if result:
+				success = true
+				break
 	
 	# Clean up:
 	_is_expecting_errors = false
