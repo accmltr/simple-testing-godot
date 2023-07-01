@@ -75,7 +75,7 @@ func error_happens(code: Callable, src: Variant, msg: String, err_code: int = -1
 	
 	# Run the code that is supposed to generate an error:
 	code.call()
-	if _error_happens_cache.size() == 1:
+	if _error_happens_cache.size() > 0:
 		var cached_error = _error_happens_cache.front()
 		
 		# Use provided callable to check if the cached error is the/an expected one:
